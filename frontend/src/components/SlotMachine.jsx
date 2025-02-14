@@ -35,7 +35,7 @@ const SlotMachine = ({
           updatedSymbols[index] = symbol;
           return updatedSymbols;
         });
-      }, index * interSymbolDelay); // Animate one at a time with a delay
+      }, (index + 1) * interSymbolDelay); // Animate one at a time with a delay
     });
   };
 
@@ -54,7 +54,7 @@ const SlotMachine = ({
         getRandomElementFromArray(symbolsSet)
       );
       animateSymbols(newSymbols);
-    }, 1000);
+    }, 500);
 
     deductCredit();
   };
