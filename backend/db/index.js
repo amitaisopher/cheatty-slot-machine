@@ -3,7 +3,7 @@ const DB = {
   createUser: function (user) {
     this.users.push(user);
   },
-  getUser: function (id) {
+  getUserById: function (id) {
     return this.users.find((user) => user.id === Number(id));
   },
   updateUser: function (id, user) {

@@ -1,12 +1,33 @@
-import { CustomError } from '../core/errors.js';
+import { CustomError } from "../core/errors.js";
+import { JWT_SECRET } from "../config/env.js";
+import jwt from "jsonwebtoken";
+import DB from "../db/index.js";
 
 const authMiddleware = (req, res, next) => {
-    const userId = req.headers['x-user-id'];
-    if (!userId) {
-        return next(new CustomError('Unauthorized', 401));
+  try {
+    let token;
+
+    if (
+      req.headers.authorization &&
+      req.headers.authorization.startsWith("Bearer")
+    ) {
+      token = req.headers.authorization.split(" ")[1];
     }
-    req.userId = userId;
+    if (!token) {
+      throw new CustomError("Unauthorized", 401);
+    }
+    const decoded = jwt.verify(token, JWT_SECRET);
+    const user = DB.getUserById(decoded.userId);
+
+    if (!user) {
+      throw new CustomError("Unauthorized", 401);
+    }
+    req.user = user;
     next();
-}
+
+  } catch (error) {
+    res.status(401).json({ message: "Unauthorized", error: error.message });
+  }
+};
 
 export default authMiddleware;
