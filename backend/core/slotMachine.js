@@ -16,15 +16,15 @@ export function calculateCreditsWon(results) {
   return SLOT_MACHINE_WINNING_AMOUNTS[results[0]];
 }
 
-export function generateSlotMachineResults(user) {
+export function generateSlotMachineResults(user, session) {
   let results = Array.from({ length: SLOT_MACHINE_NUMBER_OF_SLOTS }, () =>
     getRandomElementFromArray(SLOT_MACHINE_SYMPBOLS_SET)
   );
-
+  const totalCredit = user.credit + session.credit;
   const isWin = checkIfAllElementsAreEqual(results);
 
   if (isWin) {
-    const cheatRatio = getCheatRatio(user.credit);
+    const cheatRatio = getCheatRatio(totalCredit);
     if (cheatRatio > 0) {
       const randomNum = generateRandomNumberBeteenRange(0, 100);
       if (randomNum <= cheatRatio) {

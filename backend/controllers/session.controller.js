@@ -53,7 +53,7 @@ export const playSession = (req, res) => {
   if (session.credit === 0) {
     throw new CustomError(400, "No credit left in session");
   }
-  const results = generateSlotMachineResults(req.user); // generate results and cheat if needed
+  const results = generateSlotMachineResults(req.user, session); // generate results and cheat if needed
   session.credit += calculateCreditsWon(results); // return 0 if not a win or the amount won
   session.playedAt = new Date();
   session.credit -= 1;
