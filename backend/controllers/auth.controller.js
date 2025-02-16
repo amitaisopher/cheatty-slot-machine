@@ -7,7 +7,7 @@ export const signup = async (req, res, next) => {
     try {
         const newUser = {
             id: generateRandomId(),
-            credits: generateRandomNumberBeteenRange(20, 100),
+            credit: generateRandomNumberBeteenRange(20, 100),
         }
         DB.createUser(newUser)
         const token = jwt.sign({userId: newUser.id}, JWT_SECRET, {expiresIn: JWT_EXPIRES_IN})

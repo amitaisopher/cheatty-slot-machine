@@ -8,7 +8,11 @@ const DB = {
   },
   updateUser: function (id, user) {
     const index = this.users.findIndex((user) => user.id === Number(id));
+    if (index === -1) {
+      return null;
+    }
     this.users[index] = user;
+    return this.users[index];
   },
   deleteUser: function (id) {
     const index = this.users.findIndex((user) => user.id === Number(id));
@@ -25,7 +29,11 @@ const DB = {
     const index = this.sessions.findIndex(
       (session) => session.id === Number(id)
     );
+    if (index === -1) {
+      return null;
+    }
     this.sessions[index] = session;
+    return this.sessions[index];
   },
   deleteSessionById: function (id) {
     const index = this.sessions.findIndex(

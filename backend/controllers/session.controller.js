@@ -5,15 +5,17 @@ import {
   calculateCreditsWon,
   generateSlotMachineResults,
 } from "../core/slotMachine.js";
+import { SLOT_MACHINE_SYMPBOLS_SET } from "../config/slotMachine.js";
+import sessionRouter from "../routes/session.routes.js";
 
 export const getSession = (req, res) => {
   const sessionId = req.params.id;
   if (!sessionId) {
-    throw new CustomError(400, "Session ID is required");
+    throw new CustomError("Session ID is required", 400);
   }
   const session = DB.getSessionById(sessionId);
   if (!session) {
-    throw new CustomError(404, "Session not found");
+    throw new CustomError("Session not found", 404);
   }
   res.json(session);
 };
@@ -25,17 +27,17 @@ export const createSession = (req, res) => {
     credit: 10,
   };
   DB.createSession(session);
-  res.json(session);
+  res.status(201).json({session, symbols: SLOT_MACHINE_SYMPBOLS_SET});
 };
 
 export const deleteSession = (req, res) => {
   const sessionId = req.params.id;
   if (!sessionId) {
-    throw new CustomError(400, "Session ID is required");
+    throw new CustomError("Session ID is required", 400);
   }
   const session = DB.getSessionById(sessionId);
   if (!session) {
-    throw new CustomError(404, "Session not found");
+    throw new CustomError("Session not found", 404);
   }
   DB.deleteSessionById(sessionId);
   res.status(204);
@@ -44,14 +46,14 @@ export const deleteSession = (req, res) => {
 export const playSession = (req, res) => {
   const sessionId = req.params.id;
   if (!sessionId) {
-    throw new CustomError(400, "Session ID is required");
+    throw new CustomError("Session ID is required", 400);
   }
   const session = DB.getSessionById(req.params.id);
   if (!session) {
-    throw new CustomError(404, "Session not found");
+    throw new CustomError("Session not found", 404);
   }
   if (session.credit === 0) {
-    throw new CustomError(400, "No credit left in session");
+    throw new CustomError("No credit left in session", 400);
   }
   const results = generateSlotMachineResults(req.user, session); // generate results and cheat if needed
   session.credit += calculateCreditsWon(results); // return 0 if not a win or the amount won
@@ -61,3 +63,28 @@ export const playSession = (req, res) => {
   DB.updateSession(session.id, session);
   res.json(session);
 };
+
+export const cashoutSession = (req, res) => {
+  const sessionId = req.params.id;
+  if (!sessionId) {
+    throw new CustomError("Session ID is required", 400);
+  }
+  const session = DB.getSessionById(sessionId);
+  if (!session) {
+    throw new CustomError("Session not found", 404);
+  }
+  const user = DB.getUserById(req.user.id);
+  if (!user) {
+    throw new CustomError("User not found", 404);
+  }
+  try {
+    user.credit += session.credit;
+    DB.updateUser(user.id, user);
+    session.credit = 0;
+    DB.deleteSessionById(sessionId);
+    res.json({success: true, message: "Session cashed out successfully", user, session});
+  }
+  catch (error) {
+    throw new CustomError("Error cashing out session", 500);
+  }
+}

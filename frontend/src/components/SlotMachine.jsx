@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import SlotMachineSymbol from "./SlotMachineSymbol";
 import CustomButton from "./PlayButton";
 import {
@@ -6,58 +6,77 @@ import {
   storeValueToLocalStorage,
   getRandomElementFromArray,
 } from "../utils/helpers";
+import { signup } from "../api/authService.js";
+import { createSession, playSession, cashoutSession  } from "../api/sessionService.js";
 
-function initalizeCredit() {
-  const initialCredit = getValueFromLocalStorage("credit", 10);
-  if (initialCredit <= 0) {
-    storeValueToLocalStorage("credit", 10);
-    return 10;
-  }
-  return initialCredit;
-}
 
 const SlotMachine = ({
   numberOfSymbols = 3,
-  symbolsSet = ["🍒", "🍉", "🍋", "🍍"],
   interSymbolDelay = 1000,
 }) => {
-  const [credit, SetCredit] = useState(initalizeCredit);
+  const [credit, setCredit] = useState(0);
+  const [session, setSession] = useState(null);
+  const [symbolsSet, setSymbolsSet] = useState([" "]);
+  const [animationInProgress, setAnimationInProgress] = useState(false);
   const [symbols, setSymbols] = useState(
-    Array.from({ length: numberOfSymbols }, () => symbolsSet[0])
+    Array.from({ length: numberOfSymbols }, () => "X")
   );
+  const [sessionIsActive, setSessionIsActive] = useState(false);
   const noMoreCredit = credit <= 0;
 
   const animateSymbols = (newSymbols) => {
-    newSymbols.forEach((symbol, index) => {
-      setTimeout(() => {
-        setSymbols((prev) => {
-          const updatedSymbols = [...prev];
-          updatedSymbols[index] = symbol;
-          return updatedSymbols;
-        });
-      }, (index + 1) * interSymbolDelay); // Animate one at a time with a delay
+    setAnimationInProgress(true);
+    return new Promise((resolve) => {
+      newSymbols.forEach((symbol, index) => {
+        setTimeout(() => {
+          setSymbols((prev) => {
+            const updatedSymbols = [...prev];
+            updatedSymbols[index] = symbol;
+            return updatedSymbols;
+          });
+          if (index === newSymbols.length - 1) {
+            setAnimationInProgress(false);
+            resolve();
+          }
+        }, (index + 1) * interSymbolDelay); // Animate one at a time with a delay
+      });
     });
   };
 
-  const deductCredit = () => {
-    storeValueToLocalStorage("credit", credit - 1);
-    SetCredit((prev) => prev - 1);
-  };
-
+  
   const playButtonClickHandler = async () => {
-    console.log("Play button component was clicked");
     // Show an initial placeholder symbol for animation
     setSymbols(symbols.map(() => "X"));
 
-    setTimeout(() => {
-      const newSymbols = symbols.map(() =>
-        getRandomElementFromArray(symbolsSet)
-      );
-      animateSymbols(newSymbols);
-    }, 500);
-
-    deductCredit();
+    const response = await playSession(session.id);
+    const newSymbols = response.results
+    await animateSymbols(newSymbols);
+    setCredit(response.credit);
   };
+
+  const cashoutButtonClickHandler = async () => {
+    const response = await cashoutSession(session.id);
+    setCredit(response.session.credit);
+  }
+
+  useEffect(() => {
+    (async () => {
+      const token = localStorage.getItem("token");
+      if (!token || token == "undefined") {
+        const response = await signup();
+        localStorage.setItem("token", response.data.token);
+      }
+      const sessionData = await createSession();
+      setCredit(sessionData.session.credit);
+      setSession(sessionData.session);
+      setSymbolsSet(sessionData.symbols);
+      setSessionIsActive(true);
+    })()
+  }, []);
+
+  useEffect(() => {
+    setSymbols(Array.from({ length: numberOfSymbols }, () => symbolsSet[0]));
+  }, [symbolsSet, numberOfSymbols]);
 
   return (
     <div className="slot-machine">
@@ -70,15 +89,13 @@ const SlotMachine = ({
         className={`play-button ${noMoreCredit ? "disabled" : ""}`}
         title="PLAY"
         onClickHandler={playButtonClickHandler}
-        disabled={noMoreCredit}
+        disabled={noMoreCredit || animationInProgress}
       />
       <CustomButton
         className={`cash-out-button ${noMoreCredit ? "disabled" : ""}`}
         title="CASH OUT"
-        onClickHandler={() =>
-          console.log("Cash out button component was clicked")
-        }
-        disabled={noMoreCredit}
+        onClickHandler={cashoutButtonClickHandler}
+        disabled={noMoreCredit || animationInProgress}
       />
       <div>Remaining Credit: {credit}</div>
     </div>
