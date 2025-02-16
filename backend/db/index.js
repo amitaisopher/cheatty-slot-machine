@@ -18,7 +18,7 @@ const DB = {
   createSession: function (session) {
     this.sessions.push(session);
   },
-  getSession: function (id) {
+  getSessionById: function (id) {
     return this.sessions.find((session) => session.id === Number(id));
   },
   updateSession: function (id, session) {
@@ -27,7 +27,7 @@ const DB = {
     );
     this.sessions[index] = session;
   },
-  deleteSession: function (id) {
+  deleteSessionById: function (id) {
     const index = this.sessions.findIndex(
       (session) => session.id === Number(id)
     );
