@@ -25,6 +25,7 @@ export const createSession = (req, res) => {
     id: generateRandomId(),
     createdAt: new Date(),
     credit: 10,
+    userId: req.user.id,
   };
   DB.createSession(session);
   res.status(201).json({session, symbols: SLOT_MACHINE_SYMPBOLS_SET});
@@ -52,6 +53,10 @@ export const playSession = (req, res) => {
   if (!session) {
     throw new CustomError("Session not found", 404);
   }
+  if (session.userId !== req.user.id) {
+    throw new CustomError("User not authorized to play this session", 403);
+  }
+
   if (session.credit === 0) {
     throw new CustomError("No credit left in session", 400);
   }
@@ -72,6 +77,9 @@ export const cashoutSession = (req, res) => {
   const session = DB.getSessionById(sessionId);
   if (!session) {
     throw new CustomError("Session not found", 404);
+  }
+  if (session.userId !== req.user.id) {
+    throw new CustomError("User not authorized to cash out this session", 403);
   }
   const user = DB.getUserById(req.user.id);
   if (!user) {
