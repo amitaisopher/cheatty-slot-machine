@@ -1,5 +1,7 @@
 # cheatty-slot-machine
 Full Stack implementation of a configurable slot machine that (eventually) will take your money.
+![image](https://github.com/user-attachments/assets/c1b21beb-b689-4fe5-8a0f-fa892f44c2cd)
+
 # Cheatty Slot Machine
 
 This is the backend API for the Cheatty Slot Machine application. It provides endpoints for user authentication, session management, and slot machine gameplay.
