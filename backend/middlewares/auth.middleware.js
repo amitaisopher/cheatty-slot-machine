@@ -5,6 +5,10 @@ import DB from "../db/index.js";
 
 const authMiddleware = (req, res, next) => {
   try {
+    // Allow public access to static files under /app/*
+    if (req.path.startsWith("/app") || req.path.startsWith("/hello")) {
+      return next(); // Skip authentication for React files
+    }
     let token;
 
     if (
