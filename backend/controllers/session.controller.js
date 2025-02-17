@@ -6,7 +6,7 @@ import {
   generateSlotMachineResults,
 } from "../core/slotMachine.js";
 import { SLOT_MACHINE_SYMPBOLS_SET } from "../config/slotMachine.js";
-import sessionRouter from "../routes/session.routes.js";
+
 
 export const getSession = (req, res) => {
   const sessionId = req.params.id;
