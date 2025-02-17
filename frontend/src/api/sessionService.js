@@ -9,7 +9,8 @@ export const createSession = async (session) => {
 export const getSession = async (id) => {
   const response = await apiClient.get(`/sessions/${id}`);
   if (response.status === 401) {
-    
+    // reload the page
+    window.location.reload();
   }
   return response.data;
 };
